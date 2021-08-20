@@ -1,0 +1,54 @@
+*****************************************
+***************preprocessing*************
+*****************************************
+Run roscore in terminal
+
+1. Run "python csv_RF.py"
+This generates a csv file with experiment information+sweep information+time stamps 
+need to pass the path to grandtruth files. 
+for example '/media/batool/MULTIMODAL_DATA/Multimodal_Data/Cat4/car_20_lr_blockage_20_rl/GT' generates the csv files for experiment car_20_lr_blockage_20_rl
+Input line: 89
+Be carefull about line 53, the date of experiment need to be adjusted.
+
+
+
+2. Run "python csv_gps.py"
+This generated the csv file with experiment information +GPS coordinates+time stamps 
+need to pass the path to bage files. 
+for example '/media/batool/MULTIMODAL_DATA/Multimodal_Data/Cat4/car_20_lr_blockage_20_rl/bag_files' generated a csbv file for  experiment car_20_lr_blockage_20_rl
+Input line: 32
+
+3. Run "./pcd_bash.sh /media/batool/MULTIMODAL_DATA/Multimodal_Data/Cat3/static_on_right/bag_files"
+This will extarct the pcd files from all the bag files in the inserted directory
+
+4. Run python csv_pcd.py
+This genrates a csv file with experiment information+sweep information+pcd file names+time stamps 
+Input line: 32
+
+
+5. Run "python frameSplitterFull_me.py"
+generates frames from the input video. gets as input the path to all videos(open_path) and the time stamsp(camera_mapping)
+
+open_path = '/home/batool/Desktop/DCIM/100GOPRO/' # Change directory  /media/jgu1/My Passport/Talon/DCIM/100GOPRO/
+camera_mapping = "/media/batool/MULTIMODAL_DATA/Multimodal_Data/Cat4/car_20_lr_blockage_20_rl/camera_mapping"     ##change this input
+save directory is defined in line 53
+
+6. Run "python csv_image_new.py"
+This genrates a csv file with experiment information+sweep information+image file names+time stamps 
+
+7. Run "python synchornization.py"
+
+gets the bag files directory, authomaticaly reads the csv files and sysnchronize them
+path_directory = '/media/batool/MULTIMODAL_DATA/Multimodal_Data/Cat4/car_20_lr_blockage_20_rl/bag_files'
+
+input: line 107
+
+
+8. Run "python2 preprocessing_us.py"
+This python file only runs with python 2 in "/home/batool/Desktop/pcd/pypcd" because the python pcd library is installed there.
+Input is the bag file directory @ line 126
+path_directory = '/media/batool/MULTIMODAL_DATA/Multimodal_Data/Cat4/car_20_lr_blockage_20_rl/bag_files'
+
+This files open pcd files, quanztize and save all of them in npz files per catergory per episode(liteally per bag file)
+
+
