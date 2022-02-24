@@ -1,5 +1,5 @@
 ########################################################
-#Project name: Infocom
+#Project name: FLASH Infocom 2022
 #Date: 14/July/2021
 ########################################################
 from __future__ import division
@@ -102,7 +102,6 @@ def custom_label(y, strategy='one_hot'):
     elif strategy == 'reg':
         for i in range(0,y_shape[0]):
             thisOutputs = y[i,:]
-            # logOut = 20*np.log10(thisOutputs)   # old version
             logOut = thisOutputs
             y[i,:] = logOut
     else:
@@ -129,7 +128,6 @@ def precison_recall_F1(model,Xtest,Ytest):
 
 def detecting_related_file_paths(path,categories,episodes):
     find_all_paths =['/'.join(a.split('/')[:-1]) for a in show_all_files_in_directory(path,'rf.npz')]     # rf for example
-    # print('find_all_paths',find_all_paths)
     selected = []
     for Cat in categories:   # specify categories as input
         for ep in episodes:
@@ -147,39 +145,11 @@ def get_data(data_paths,modality,key,test_on_all,path_test_all):   # per cat for
             open_file = open_npz(l+'/'+modality+'.npz',key)
             train_data = open_file[randperm[:int(0.8*len(randperm))]]
             validation_data = open_file[randperm[int(0.8*len(randperm)):int(0.9*len(randperm))]]
-            test_data = open_file[randperm[int(0.9*len(randperm)):]]
             first = False
         else:
             open_file = open_npz(l+'/'+modality+'.npz',key)
             train_data = np.concatenate((train_data, open_file[randperm[:int(0.8*len(randperm))]]),axis = 0)
             validation_data = np.concatenate((validation_data, open_file[randperm[int(0.8*len(randperm)):int(0.9*len(randperm))]]),axis = 0)
-            test_data = np.concatenate((test_data, open_file[randperm[int(0.9*len(randperm)):]]),axis = 0)
-
-
-        ####PER CAT
-        if 'Cat1' in l.split('/'):
-            try:
-                test_data_cat1 = np.concatenate((test_data_cat1, open_file[randperm[int(0.9*len(randperm)):]]),axis = 0)
-            except NameError:
-                test_data_cat1 = open_file[randperm[int(0.9*len(randperm)):]]
-
-        elif 'Cat2' in l.split('/'):
-            try:
-                test_data_cat2 = np.concatenate((test_data_cat2, open_file[randperm[int(0.9*len(randperm)):]]),axis = 0)
-            except NameError:
-                test_data_cat2 = open_file[randperm[int(0.9*len(randperm)):]]
-
-        elif 'Cat3' in l.split('/'):
-            try:
-                test_data_cat3 = np.concatenate((test_data_cat3, open_file[randperm[int(0.9*len(randperm)):]]),axis = 0)
-            except NameError:
-                test_data_cat3 = open_file[randperm[int(0.9*len(randperm)):]]
-
-        elif 'Cat4' in l.split('/'):
-            try:
-                test_data_cat4 = np.concatenate((test_data_cat4, open_file[randperm[int(0.9*len(randperm)):]]),axis = 0)
-            except NameError:
-                test_data_cat4 = open_file[randperm[int(0.9*len(randperm)):]]
 
     if test_on_all:
         test_data = open_npz(path_test_all+'/'+modality+'_'+'all.npz',key)
@@ -191,7 +161,6 @@ def get_data(data_paths,modality,key,test_on_all,path_test_all):   # per cat for
     print('categories shapes',test_data_cat1.shape,test_data_cat2.shape,test_data_cat3.shape,test_data_cat4.shape)
     print('tr/val/te',train_data.shape,validation_data.shape,test_data.shape)
     return train_data,validation_data,test_data, test_data_cat1, test_data_cat2, test_data_cat3, test_data_cat4
-
 
 
 parser = argparse.ArgumentParser(description='Configure the files before training the net.')
@@ -207,7 +176,7 @@ parser.add_argument('--shuffle', help='shuffle or not', type=str2bool, default =
 
 parser.add_argument('--strategy', type=str ,default='one_hot', help='labeling strategy to use',choices=['baseline','one_hot','reg'])
 parser.add_argument('--restore_models', type=str2bool, help='Load single modality trained weights', default=False)
-parser.add_argument('--model_folder', help='Location of the trained models folder', type=str,default = '/home/batool/FL/baseline_code/model_folder/')
+parser.add_argument('--model_folder', help='Location of the trained models folder', type=str,default = '/home/batool/FL-based-Sector-Selection/code/centerlized_and_per_episode/')
 parser.add_argument('--image_feature_to_use', type=str ,default='raw', help='feature images to use',choices=['raw','custom'])
 
 parser.add_argument('--experiment_catergories', nargs='*' ,default=['Cat1','Cat2','Cat3','Cat4'], help='categories included',choices=['Cat1','Cat2','Cat3','Cat4'])
@@ -227,7 +196,6 @@ if args.id_gpu >= 0:
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.id_gpu)
 
 check_and_create(args.model_folder)
-
 
 print('******************Detecting related file paths*************************')
 selected_paths = detecting_related_file_paths(args.data_folder,args.experiment_catergories,args.experiment_epiosdes)
@@ -277,8 +245,6 @@ if 'coord' in args.input:
     gps_c4 = gps_c4.reshape((gps_c4.shape[0], gps_c4.shape[1], 1))
 
 
-
-
 if 'img' in args.input:
     print('******************Getting image data*************************')
     X_img_train, X_img_validation, X_img_test,img_c1,img_c2,img_c3,img_c4 = get_data(selected_paths,'image','img',args.test_all,args.test_all_path)
@@ -316,7 +282,6 @@ if 'coord' in args.input:
     if args.restore_models:
         coord_model = load_model_structure(args.model_folder+'coord_model.json')
         coord_model.load_weights(args.model_folder + 'best_weights.coord.h5', by_name=True)
-        # coord_model.trainable = False
     else:
         coord_model = modelHand.createArchitecture('coord_mlp',num_classes,coord_train_input_shape[1],'complete',args.strategy, fusion)
         if not os.path.exists(args.model_folder+'coord_model.json'):
@@ -332,7 +297,6 @@ if 'img' in args.input:
     if args.restore_models:
         img_model = load_model_structure(args.model_folder+'image_'+args.image_feature_to_use+'_model'+'.json')
         img_model.load_weights(args.model_folder + 'best_weights.img_'+args.image_feature_to_use+'.h5', by_name=True)
-        # img_model.trainable = False
     else:
         img_model = modelHand.createArchitecture(model_type,num_classes,[img_train_input_shape[1],img_train_input_shape[2],3],'complete',args.strategy,fusion)
         if not os.path.exists(args.model_folder+'image_'+args.image_feature_to_use+'_model'+'.json'):
@@ -342,7 +306,6 @@ if 'lidar' in args.input:
     if args.restore_models:
         lidar_model = load_model_structure(args.model_folder+'lidar_model.json')
         lidar_model.load_weights(args.model_folder + 'best_weights.lidar.h5', by_name=True)
-        # lidar_model.trainable = False
     else:
         lidar_model = modelHand.createArchitecture('lidar_marcus',num_classes,[lidar_train_input_shape[1],lidar_train_input_shape[2],lidar_train_input_shape[3]],'complete',args.strategy, fusion)
         if not os.path.exists(args.model_folder+'lidar_model.json'):
@@ -358,13 +321,6 @@ if multimodal == 2:
         x_test = [X_lidar_test, X_coord_test]
 
         combined_model = concatenate([lidar_model.output, coord_model.output],name = 'cont_fusion_coord_lidar')
-        # z = Reshape((2, 64))(combined_model)
-        # z = Permute((2, 1), input_shape=(2, 64))(z)
-        # z = Conv1D(30, kernel_size=2, strides=1, activation="relu",name = 'conv1_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = BatchNormalization()(z)
-        # z = MaxPooling1D(name='fusion_coord_lid_maxpool1')(z)
-
-        # z = Flatten(name = 'flat_fusion_coord_lid')(z)
         reg_val=0.001
         z = Dense(600,activation='relu',kernel_regularizer=l2(reg_val), bias_regularizer=l2(reg_val))(combined_model)
         z = BatchNormalization()(z)
@@ -399,9 +355,6 @@ if multimodal == 2:
         y_true_bool = np.argmax(y_test, axis=1)
         print(classification_report(y_true_bool, y_pred_bool))
         print('avegare presion,recall,f1',precision_recall_fscore(y_true_bool, y_pred_bool,average='weighted'))
-        #####Get accuracy per K
-        # print('per k accuracy ',over_k(y_test,y_pred))
-
 ###############################################################################
 # Fusion: Coordinate+Image
 ###############################################################################
@@ -454,8 +407,6 @@ if multimodal == 2:
         y_true_bool = np.argmax(y_test, axis=1)
         print(classification_report(y_true_bool, y_pred_bool))
         print('avegare presion,recall,f1',precision_recall_fscore(y_true_bool, y_pred_bool,average='weighted'))
-        #####Per K accuracy
-        # print('per k accuracy ',over_k(y_test,y_pred))
 
 ##############################################################################
 # Fusion: Image+LIDAR
@@ -466,24 +417,6 @@ if multimodal == 2:
         x_test = [X_lidar_test, X_img_test]
 
         combined_model = concatenate([lidar_model.output, img_model.output],name = 'cont_fusion_img_lidar')
-        # z = Reshape((2, 64))(combined_model)
-        # z = Permute((2, 1), input_shape=(2, 64))(z)
-        # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv1_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv2_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = BatchNormalization()(z)
-        # z = MaxPooling1D(name='fusion_img_lid_maxpool1')(z)
-
-        # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv3_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv4_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = MaxPooling1D(name='fusion_img_lid_maxpool2')(z)
-
-        # z = Flatten(name = 'flat_fusion_img_lid')(z)
-        # z = Dense(num_classes * 3, activation="relu", use_bias=True,name = 'dense1_fusion_img_lid')(z)
-        # z = Dropout(0.25,name = 'drop1_fusion_img_lidr')(z)
-        # # z = Dense(num_classes, activation="softmax", use_bias=True,name = 'dense2_fusion_coord_img')(z)
-        # z = Dense(num_classes * 2, activation="relu",name = 'dense2_fusion_img_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
-        # z = Dropout(0.25,name = 'drop2_fusion_img_lid')(z)
-        # z = Dense(num_classes, activation="softmax",name = 'dense3_fusion_img_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
         reg_val=0.001
         z = Dense(600,activation='relu',kernel_regularizer=l2(reg_val), bias_regularizer=l2(reg_val))(combined_model)
         z = BatchNormalization()(z)
@@ -519,8 +452,6 @@ if multimodal == 2:
         y_true_bool = np.argmax(y_test, axis=1)
         print(classification_report(y_true_bool, y_pred_bool))
         print('avegare presion,recall,f1',precision_recall_fscore(y_true_bool, y_pred_bool,average='weighted'))
-        #####Per K accuracy
-        # print('per k accuracy ',over_k(y_test,y_pred))
 
 ##############################################################################
 # Fusion: Coordinate+Image+LIDAR
@@ -530,23 +461,6 @@ elif multimodal == 3:
     x_validation = [X_lidar_validation, X_img_validation, X_coord_validation]
     x_test = [X_lidar_test, X_img_test, X_coord_test]
     combined_model = concatenate([lidar_model.output, img_model.output, coord_model.output])
-    # z =check_shape= Reshape((3, 64))(combined_model)
-    # z = Permute((2, 1), input_shape=(3, 64))(z)
-    # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv1_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv2_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = BatchNormalization()(z)
-    # z = MaxPooling1D(name='fusion_coord_lid_maxpool1')(z)
-
-    # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv3_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv4_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = MaxPooling1D(name='fusion_coord_lid_maxpool2')(z)
-
-    # z = Flatten(name = 'flat_fusion_coord_lid')(z)
-    # z = Dense(num_classes * 3, activation="relu", use_bias=True,name = 'dense1_fusion_coord_lid')(z)
-    # z = Dropout(0.25,name = 'drop1_fusion_coord_lid')(z)            # # z = Dense(num_classes, activation="softmax", use_bias=True,name = 'dense2_fusion_coord_img')(z)
-    # z = Dense(num_classes * 2, activation="relu",name = 'dense2_fusion_coord_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
-    # z = Dropout(0.25,name = 'drop2_fusion_coord_img')(z)
-    # z = Dense(num_classes, activation="softmax",name = 'dense3_fusion_coord_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
     reg_val=0.001
     z = Dense(1024,activation='relu',kernel_regularizer=l2(reg_val), bias_regularizer=l2(reg_val))(combined_model)
     z = BatchNormalization()(z)
@@ -568,11 +482,11 @@ elif multimodal == 3:
                                         top_2_accuracy, top_5_accuracy,top_10_accuracy,top_25_accuracy,top_50_accuracy])
     model.summary()
 
-    # hist = model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=args.epochs, batch_size=args.bs, callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.coord_img_lidar_'+args.image_feature_to_use+'.h5', monitor='val_loss', verbose=1, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25, verbose=2,mode='auto')])
+    hist = model.fit(x_train, y_train, validation_data=(x_validation, y_validation), epochs=args.epochs, batch_size=args.bs, callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.coord_img_lidar_'+args.image_feature_to_use+'.h5', monitor='val_loss', verbose=1, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=25, verbose=2,mode='auto')])
 
-    # print(hist.history.keys())
-    # print('loss',hist.history['loss'],'val_loss',hist.history['val_loss'],'categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
-    #             ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
+    print(hist.history.keys())
+    print('loss',hist.history['loss'],'val_loss',hist.history['val_loss'],'categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
+                ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
 
     print('***************Testing the model************')
     model.load_weights(args.model_folder+'best_weights.coord_img_lidar_'+args.image_feature_to_use+'.h5', by_name=True)
@@ -585,8 +499,6 @@ elif multimodal == 3:
     y_true_bool = np.argmax(y_test, axis=1)
     print(classification_report(y_true_bool, y_pred_bool))
     print('avegare presion,recall,f1',precision_recall_fscore(y_true_bool, y_pred_bool,average='weighted'))
-    ##### Per K accuracy
-    # print('per k accuracy all ',over_k(y_test,y_pred))
     print('***************Testing per category************')
     x_c1 = [lid_c1, img_c1, gps_c1]
     x_c2 = [lid_c2, img_c2, gps_c2]
@@ -630,12 +542,12 @@ else:
 
 
             call_backs = []
-            # hist = model.fit(X_coord_train,y_train, validation_data=(X_coord_validation, y_validation),
-            # epochs=args.epochs,batch_size=args.bs, shuffle=args.shuffle, callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.coord.h5', monitor='val_loss', verbose=1, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, verbose=2, mode='auto')])
+            hist = model.fit(X_coord_train,y_train, validation_data=(X_coord_validation, y_validation),
+            epochs=args.epochs,batch_size=args.bs, shuffle=args.shuffle, callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.coord.h5', monitor='val_loss', verbose=1, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, verbose=2, mode='auto')])
 
-            # print(hist.history.keys())
-            # print('categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
-            #         ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
+            print(hist.history.keys())
+            print('categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
+                    ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
 
             print('***************Testing model************')
             model.load_weights(args.model_folder + 'best_weights.coord.h5', by_name=True)   ## Restoring best weight for testing
@@ -684,13 +596,13 @@ else:
                                         top_2_accuracy, top_5_accuracy, top_10_accuracy, top_25_accuracy,
                                         top_50_accuracy])
             model.summary()
-            # hist = model.fit(X_img_train,y_train, validation_data=(X_img_validation, y_validation),
-            # epochs=args.epochs,batch_size=args.bs, shuffle=args.shuffle, callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.img_'+args.image_feature_to_use+'.h5', monitor='val_loss', verbose=1, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, verbose=2, mode='auto')])
+            hist = model.fit(X_img_train,y_train, validation_data=(X_img_validation, y_validation),
+            epochs=args.epochs,batch_size=args.bs, shuffle=args.shuffle, callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.img_'+args.image_feature_to_use+'.h5', monitor='val_loss', verbose=1, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, verbose=2, mode='auto')])
 
 
-            # print(hist.history.keys())
-            # print('categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
-            #         ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
+            print(hist.history.keys())
+            print('categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
+                    ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
 
             print('***************Testing model************')
             model.load_weights(args.model_folder + 'best_weights.img_'+args.image_feature_to_use+'.h5', by_name=True)
@@ -735,11 +647,11 @@ else:
                                         top_2_accuracy, top_5_accuracy,top_10_accuracy, top_25_accuracy,
                                         top_50_accuracy])
             model.summary()
-            # hist = model.fit(X_lidar_train,y_train, validation_data=(X_lidar_validation, y_validation),epochs=args.epochs,batch_size=args.bs, shuffle=args.shuffle,callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.lidar.h5', monitor='val_loss', verbose=2, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, verbose=2,mode='auto')])
+            hist = model.fit(X_lidar_train,y_train, validation_data=(X_lidar_validation, y_validation),epochs=args.epochs,batch_size=args.bs, shuffle=args.shuffle,callbacks=[tf.keras.callbacks.ModelCheckpoint(args.model_folder+'best_weights.lidar.h5', monitor='val_loss', verbose=2, save_best_only=True,mode='auto'),tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, verbose=2,mode='auto')])
 
-            # print(hist.history.keys())
-            # print('val_loss',hist.history['val_loss'],'categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
-            #         ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
+            print(hist.history.keys())
+            print('val_loss',hist.history['val_loss'],'categorical_accuracy', hist.history['categorical_accuracy'],'top_2_accuracy',hist.history['top_2_accuracy'],'top_5_accuracy',hist.history['top_5_accuracy'],'top_10_accuracy', hist.history['top_10_accuracy'],'top_25_accuracy',hist.history['top_25_accuracy'],'top_50_accuracy',hist.history['top_50_accuracy']
+                    ,'val_categorical_accuracy',hist.history['val_categorical_accuracy'],'val_top_2_accuracy',hist.history['val_top_2_accuracy'],'val_top_5_accuracy',hist.history['val_top_5_accuracy'],'val_top_10_accuracy',hist.history['val_top_10_accuracy'],'val_top_25_accuracy',hist.history['val_top_25_accuracy'],'val_top_50_accuracy',hist.history['val_top_50_accuracy'])
 
             print('***************Testing model************')
             model.load_weights(args.model_folder + 'best_weights.lidar.h5', by_name=True)   # to be added
@@ -763,41 +675,3 @@ else:
             print('scores_cat3',scores_cat3,'PRF',precison_recall_F1(model,lid_c3,y_c3))
             scores_cat4 = model.evaluate(lid_c4, y_c4)
             print('scores_cat4',scores_cat4,'PRF',precison_recall_F1(model,lid_c4,y_c4))
-
-
-
-
-
-
-
-
-
-
-# def get_data(data_path,modality,key):   # per cat for now, need to add per epside for FL part
-
-#     first = True
-#     for l in tqdm(selected_paths):
-#         if first == True:
-#             randperm = np.load(l+'/ranperm.npy')
-#             data = open_npz(l+'/'+modality+'.npz',key)
-#             first = False
-#         else:
-#             data = np.concatenate((data, open_npz(l+'/gps.npz','gps')),axis = 0)
-#     print('len data',len(data))
-
-#     train_data = data[randperm[:int(0.8*len(data))]]
-#     validation_data = data[randperm[int(0.8*len(data)):int(0.9*len(data))]]
-#     test_data = data[randperm[int(0.9*len(data)):]]
-
-#     return train_data,validation_data,test_data
-
-
-
-# find_all_paths =['/'.join(a.split('/')[:-1]) for a in show_all_files_in_directory(args.data_folder,'rf.npz')]     # rf for example
-
-# selected_paths = []
-# for Cat in args.experiment_catergories:   # specify categories as input
-#     for ep in args.experiment_epiosdes:
-#         selected_paths = selected_paths + [s for s in find_all_paths if Cat in s.split('/') and 'episode_'+str(ep) in s.split('/')]
-# print('Getting {} data out of {}'.format(len(selected_paths),len(find_all_paths)))
-# print(len(selected_paths))
