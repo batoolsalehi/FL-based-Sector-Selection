@@ -1,6 +1,6 @@
 ## FLASH: Federated Learning for Automated Selection of High-band mmWave Sectors
 
-The present code implements FLASH framework. The dataset is available in our public repository (https://genesys-lab.org/multimodal-fusion-nextg-v2x-communications).
+The present code implements FLASH framework. The dataset is available in our public repository [here](https://genesys-lab.org/multimodal-fusion-nextg-v2x-communications).
 
 ### Pre-requisites
 
@@ -18,7 +18,7 @@ To use this repository, please refer to our paper:
  
  
 ### Run Centerlized and Local Learning:
-To access the code of the FLASH architecture see "codes/center_local". We use a fixed seed throughout all experiments. Run the commands below to generate the seed and global test data accordingly. Remember to change to base path to your own local machine.
+To access the code of the FLASH architecture see "codes/centralized_and_local". We use a fixed seed throughout all experiments. Run the commands below to generate the seed and global test data accordingly. Remember to change to base path to your own local machine.
 
         python generate_randperm.py
         python all_test.py
@@ -39,3 +39,8 @@ To access the code of the FLASH architecture see "codes/federated". A bash scrip
         ./run_FLASH.sh path_to_data_directory path_to_save_models
 
 To explore different aggregation policies adjust the "policy" through argparse arguments.
+
+### Missing Information Analysis:
+To access the code of the FLASH architecture see "codes/Missing_info". Note that in this scenario, we are just testing. The control parameters for missing information are contorled through samples_back and prob variables in the code. 
+
+        python main.py --data_folder path_to_data --input coord img lidar --model_folder save_model_path --test_all_path path_to_global_testset_directory 
