@@ -178,13 +178,13 @@ def get_data(data_paths,modality,key):   # per cat for now, need to add per epsi
 
     return test_data, test_data_cat1, test_data_cat2, test_data_cat3, test_data_cat4
 
+
+
+
+
 data_path = '/home/batool/FL/data_half_half_size'
 save_path = '/home/batool/FL/baseline_code/all_test/'
-
-
 selected_paths = detecting_related_file_paths(data_path,['Cat1','Cat2','Cat3','Cat4'],['0','1','2','3','4','5','6','7','8','9'])
-
-
 
 test_data, test_data_cat1, test_data_cat2, test_data_cat3, test_data_cat4 = get_data(selected_paths,'rf','rf')
 print(test_data.shape, test_data_cat1.shape, test_data_cat2.shape, test_data_cat3.shape, test_data_cat4.shape)
