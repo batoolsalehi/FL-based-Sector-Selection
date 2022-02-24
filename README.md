@@ -8,7 +8,7 @@ The present code implements FLASH framework. The FLASH dataset is available in o
 
 - Keras 2.4.3 
 
-- tensorflow 2.2.0
+- Tensorflow 2.2.0
 
 
 ### Cite This paper
