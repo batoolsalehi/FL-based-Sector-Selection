@@ -1,6 +1,6 @@
 ## FLASH: Federated Learning for Automated Selection of High-band mmWave Sectors
 
-The present code implements FLASH framework. The dataset is available in our public repository [here](https://genesys-lab.org/multimodal-fusion-nextg-v2x-communications).
+The present code implements FLASH framework. The FLASH dataset is available in our public repository [here](https://genesys-lab.org/multimodal-fusion-nextg-v2x-communications).
 
 ### Pre-requisites
 
