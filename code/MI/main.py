@@ -1,5 +1,5 @@
 ########################################################
-#Project name: Infocom
+#Project name: FLASH Infocom 2022
 #Date: 14/July/2021
 ########################################################
 from __future__ import division
@@ -338,8 +338,6 @@ selected_paths = detecting_related_file_paths(args.data_folder,args.experiment_c
 #     gps_c4 = gps_c4.reshape((gps_c4.shape[0], gps_c4.shape[1], 1))
 
 
-
-
 # if 'img' in args.input:
 #     print('******************Getting image data*************************')
 #     X_img_train, X_img_validation, X_img_test,img_c1,img_c2,img_c3,img_c4 = get_data(selected_paths,'image','img',args.test_all,args.test_all_path)
@@ -380,7 +378,6 @@ if 'coord' in args.input:
     if args.restore_models:
         coord_model = load_model_structure(args.model_folder+'coord_model.json')
         coord_model.load_weights(args.model_folder + 'best_weights.coord.h5', by_name=True)
-        # coord_model.trainable = False
     else:
         coord_model = modelHand.createArchitecture('coord_mlp',num_classes,coord_train_input_shape[1],'complete',args.strategy, fusion)
         if not os.path.exists(args.model_folder+'coord_model.json'):
@@ -406,7 +403,6 @@ if 'lidar' in args.input:
     if args.restore_models:
         lidar_model = load_model_structure(args.model_folder+'lidar_model.json')
         lidar_model.load_weights(args.model_folder + 'best_weights.lidar.h5', by_name=True)
-        # lidar_model.trainable = False
     else:
         lidar_model = modelHand.createArchitecture('lidar_marcus',num_classes,[lidar_train_input_shape[1],lidar_train_input_shape[2],lidar_train_input_shape[3]],'complete',args.strategy, fusion)
         if not os.path.exists(args.model_folder+'lidar_model.json'):
@@ -422,13 +418,6 @@ if multimodal == 2:
         x_test = [X_lidar_test, X_coord_test]
 
         combined_model = concatenate([lidar_model.output, coord_model.output],name = 'cont_fusion_coord_lidar')
-        # z = Reshape((2, 64))(combined_model)
-        # z = Permute((2, 1), input_shape=(2, 64))(z)
-        # z = Conv1D(30, kernel_size=2, strides=1, activation="relu",name = 'conv1_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = BatchNormalization()(z)
-        # z = MaxPooling1D(name='fusion_coord_lid_maxpool1')(z)
-
-        # z = Flatten(name = 'flat_fusion_coord_lid')(z)
         reg_val=0.001
         z = Dense(600,activation='relu',kernel_regularizer=l2(reg_val), bias_regularizer=l2(reg_val))(combined_model)
         z = BatchNormalization()(z)
@@ -463,8 +452,6 @@ if multimodal == 2:
         y_true_bool = np.argmax(y_test, axis=1)
         print(classification_report(y_true_bool, y_pred_bool))
         print('avegare presion,recall,f1',precision_recall_fscore(y_true_bool, y_pred_bool,average='weighted'))
-        #####Get accuracy per K
-        # print('per k accuracy ',over_k(y_test,y_pred))
 
 ###############################################################################
 # Fusion: Coordinate+Image
@@ -518,9 +505,6 @@ if multimodal == 2:
         y_true_bool = np.argmax(y_test, axis=1)
         print(classification_report(y_true_bool, y_pred_bool))
         print('avegare presion,recall,f1',precision_recall_fscore(y_true_bool, y_pred_bool,average='weighted'))
-        #####Per K accuracy
-        # print('per k accuracy ',over_k(y_test,y_pred))
-
 ##############################################################################
 # Fusion: Image+LIDAR
 ###############################################################################
@@ -530,24 +514,6 @@ if multimodal == 2:
         x_test = [X_lidar_test, X_img_test]
 
         combined_model = concatenate([lidar_model.output, img_model.output],name = 'cont_fusion_img_lidar')
-        # z = Reshape((2, 64))(combined_model)
-        # z = Permute((2, 1), input_shape=(2, 64))(z)
-        # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv1_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv2_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = BatchNormalization()(z)
-        # z = MaxPooling1D(name='fusion_img_lid_maxpool1')(z)
-
-        # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv3_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv4_fusion_img_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-        # z = MaxPooling1D(name='fusion_img_lid_maxpool2')(z)
-
-        # z = Flatten(name = 'flat_fusion_img_lid')(z)
-        # z = Dense(num_classes * 3, activation="relu", use_bias=True,name = 'dense1_fusion_img_lid')(z)
-        # z = Dropout(0.25,name = 'drop1_fusion_img_lidr')(z)
-        # # z = Dense(num_classes, activation="softmax", use_bias=True,name = 'dense2_fusion_coord_img')(z)
-        # z = Dense(num_classes * 2, activation="relu",name = 'dense2_fusion_img_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
-        # z = Dropout(0.25,name = 'drop2_fusion_img_lid')(z)
-        # z = Dense(num_classes, activation="softmax",name = 'dense3_fusion_img_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
         reg_val=0.001
         z = Dense(600,activation='relu',kernel_regularizer=l2(reg_val), bias_regularizer=l2(reg_val))(combined_model)
         z = BatchNormalization()(z)
@@ -583,34 +549,12 @@ if multimodal == 2:
         y_true_bool = np.argmax(y_test, axis=1)
         print(classification_report(y_true_bool, y_pred_bool))
         print('avegare presion,recall,f1',precision_recall_fscore(y_true_bool, y_pred_bool,average='weighted'))
-        #####Per K accuracy
-        # print('per k accuracy ',over_k(y_test,y_pred))
 
 ##############################################################################
 # Fusion: Coordinate+Image+LIDAR
 ###############################################################################
 elif multimodal == 3:
-    # x_train = [X_lidar_train,X_img_train,X_coord_train]
-    # x_validation = [X_lidar_validation, X_img_validation, X_coord_validation]
-    # x_test = [X_lidar_test, X_img_test, X_coord_test]
     combined_model = concatenate([lidar_model.output, img_model.output, coord_model.output])
-    # z =check_shape= Reshape((3, 64))(combined_model)
-    # z = Permute((2, 1), input_shape=(3, 64))(z)
-    # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv1_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv2_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = BatchNormalization()(z)
-    # z = MaxPooling1D(name='fusion_coord_lid_maxpool1')(z)
-
-    # z = Conv1D(30, kernel_size=7, strides=1, activation="relu",name = 'conv3_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = Conv1D(30, kernel_size=5, strides=1, activation="relu",name = 'conv4_fusion_coord_lid')(z)  # KERNEL SIZE CHANGED FROM 1 TO 2
-    # z = MaxPooling1D(name='fusion_coord_lid_maxpool2')(z)
-
-    # z = Flatten(name = 'flat_fusion_coord_lid')(z)
-    # z = Dense(num_classes * 3, activation="relu", use_bias=True,name = 'dense1_fusion_coord_lid')(z)
-    # z = Dropout(0.25,name = 'drop1_fusion_coord_lid')(z)            # # z = Dense(num_classes, activation="softmax", use_bias=True,name = 'dense2_fusion_coord_img')(z)
-    # z = Dense(num_classes * 2, activation="relu",name = 'dense2_fusion_coord_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
-    # z = Dropout(0.25,name = 'drop2_fusion_coord_img')(z)
-    # z = Dense(num_classes, activation="softmax",name = 'dense3_fusion_coord_lid', kernel_regularizer=regularizers.l1_l2(l1=1e-5, l2=1e-4))(z)
     reg_val=0.001
     z = Dense(1024,activation='relu',kernel_regularizer=l2(reg_val), bias_regularizer=l2(reg_val))(combined_model)
     z = BatchNormalization()(z)
@@ -851,91 +795,3 @@ else:
             print('scores_cat3',scores_cat3,'PRF',precison_recall_F1(model,lid_c3,y_c3))
             scores_cat4 = model.evaluate(lid_c4, y_c4)
             print('scores_cat4',scores_cat4,'PRF',precison_recall_F1(model,lid_c4,y_c4))
-
-
-
-
-
-
-
-
-
-
-# def get_data(data_path,modality,key):   # per cat for now, need to add per epside for FL part
-
-#     first = True
-#     for l in tqdm(selected_paths):
-#         if first == True:
-#             randperm = np.load(l+'/ranperm.npy')
-#             data = open_npz(l+'/'+modality+'.npz',key)
-#             first = False
-#         else:
-#             data = np.concatenate((data, open_npz(l+'/gps.npz','gps')),axis = 0)
-#     print('len data',len(data))
-
-#     train_data = data[randperm[:int(0.8*len(data))]]
-#     validation_data = data[randperm[int(0.8*len(data)):int(0.9*len(data))]]
-#     test_data = data[randperm[int(0.9*len(data)):]]
-
-#     return train_data,validation_data,test_data
-
-
-
-# find_all_paths =['/'.join(a.split('/')[:-1]) for a in show_all_files_in_directory(args.data_folder,'rf.npz')]     # rf for example
-
-# selected_paths = []
-# for Cat in args.experiment_catergories:   # specify categories as input
-#     for ep in args.experiment_epiosdes:
-#         selected_paths = selected_paths + [s for s in find_all_paths if Cat in s.split('/') and 'episode_'+str(ep) in s.split('/')]
-# print('Getting {} data out of {}'.format(len(selected_paths),len(find_all_paths)))
-# print(len(selected_paths))
-
-
-
-
-
-
-# def get_past_data(data_paths,samples_back):
-#     for l in tqdm(data_paths):
-#         # print('l',l)
-#         randperm = np.load(l+'/ranperm.npy')
-#         open_file_rf = open_npz(l+'/'+'rf'+'.npz','rf')
-#         open_file_gps = open_npz(l+'/'+'gps'+'.npz','gps')
-#         open_file_img = open_npz(l+'/'+'image'+'.npz','img')
-#         open_file_lidar = open_npz(l+'/'+'lidar'+'.npz','lidar')
-
-#         try:
-#             test_data_samples_back_rf = np.concatenate((test_data_samples_back_rf, open_file_rf[randperm[int(0.9*len(randperm)):]]),axis = 0)
-#             test_data_samples_back_gps = np.concatenate((test_data_samples_back_gps, open_file_gps[randperm[int(0.9*len(randperm)):]-samples_back]),axis = 0)
-#             test_data_samples_back_img = np.concatenate((test_data_samples_back_img, open_file_img[randperm[int(0.9*len(randperm)):]-samples_back]),axis = 0)
-#             test_data_samples_back_lidar = np.concatenate((test_data_samples_back_lidar, open_file_lidar[randperm[int(0.9*len(randperm)):]-samples_back]),axis = 0)
-
-#         except:
-#             test_data_samples_back_rf = open_file_rf[randperm[int(0.9*len(randperm)):]]
-#             test_data_samples_back_gps = open_file_gps[randperm[int(0.9*len(randperm)):]-samples_back]
-#             test_data_samples_back_img = open_file_img[randperm[int(0.9*len(randperm)):]-samples_back]
-#             test_data_samples_back_lidar = open_file_lidar[randperm[int(0.9*len(randperm)):]-samples_back]
-
-
-#         print('check shapes',test_data_samples_back_rf.shape, test_data_samples_back_gps.shape, test_data_samples_back_img.shape, test_data_samples_back_lidar.shape)
-
-#         # test_data_rf = open_file_rf[randperm[int(0.9*len(randperm)):]]
-#         # test_data_samples_back_rf = open_file_rf[randperm[int(0.9*len(randperm)):]-samples_back]
-#     test_data_samples_back_rf, _ = custom_label(test_data_samples_back_rf,'one_hot')
-
-#         # test_data_gps = open_file_gps[randperm[int(0.9*len(randperm)):]]
-#         # test_data_samples_back_gps = open_file_gps[randperm[int(0.9*len(randperm)):]-samples_back]
-#     test_data_samples_back_gps = test_data_samples_back_gps/ 9747
-#     test_data_samples_back_gps = test_data_samples_back_gps.reshape((test_data_samples_back_gps.shape[0], test_data_samples_back_gps.shape[1], 1))
-
-
-#         # test_data_img = open_file_img[randperm[int(0.9*len(randperm)):]]
-#         # test_data_samples_back_img = open_file_img[randperm[int(0.9*len(randperm)):]-samples_back]
-#     test_data_samples_back_img = test_data_samples_back_img/ 255
-
-#         # test_data_lidar = open_file_lidar[randperm[int(0.9*len(randperm)):]]
-#         # test_data_samples_back_lidar = open_file_lidar[randperm[int(0.9*len(randperm)):]-samples_back]
-
-
-
-#     return test_data_samples_back_rf, test_data_samples_back_gps, test_data_samples_back_img, test_data_samples_back_lidar
